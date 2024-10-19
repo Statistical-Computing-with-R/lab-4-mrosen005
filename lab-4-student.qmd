@@ -56,7 +56,9 @@ Let's start by focusing only on California.
 
 ca_childcare <- counties |> 
   filter(state_abbreviation == "CA") |>
-  right_join(childcare_costs, by = "county_fips_code")
+  right_join(childcare_costs,
+             by = "county_fips_code"
+             )
 
 ```
 
@@ -65,10 +67,17 @@ ca_childcare <- counties |>
 
 ```{r}
 #| label: recoding-county-to-census-regions
+ca_distinct_counties <- ca_childcare |> 
+  distinct(county_name)
+
 
 ca_childcare <- ca_childcare |> 
-  mutate(county_name = str_remove(county_name, " County")) |>
-  ...
+  mutate(county_name = str_remove(county_name, "County")) |>
+#  distinct(county_name)
+
+  
+  
+  
 ```
 
 
