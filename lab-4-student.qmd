@@ -27,6 +27,7 @@ The data come to us from [TidyTuesday](https://github.com/rfordatascience/tidytu
 ```{r}
 #| label: setup
 library(tidyverse)
+
 ```
 
 ```{r}
@@ -67,17 +68,80 @@ ca_childcare <- counties |>
 
 ```{r}
 #| label: recoding-county-to-census-regions
-ca_distinct_counties <- ca_childcare |> 
-  distinct(county_name)
 
 
 ca_childcare <- ca_childcare |> 
-  mutate(county_name = str_remove(county_name, "County")) |>
-#  distinct(county_name)
+ mutate(county_name = str_remove(county_name, " County")) |>
+  mutate(region = fct_collapse(county_name,
+                               "Superior California" = c("Butte",
+                                                         "Colusa",
+                                                         "El Dorado",
+                                                         "Glenn", 
+                                                         "Lassen", 
+                                                         "Modoc",
+                                                         "Nevada",
+                                                         "Placer", 
+                                                         "Plumas", 
+                                                         "Sacramento", 
+                                                         "Shasta", 
+                                                         "Sierra", 
+                                                         "Siskiyou",
+                                                         "Sutter", 
+                                                         "Tehama", 
+                                                         "Yolo",
+                                                         "Yuba"
+                                                         ),
+                               "North Coast" = c("Del Norte",
+                                                 "Humboldt",
+                                                 "Lake",
+                                                 "Mendocino", 
+                                                 "Napa", "Sonoma", 
+                                                 "Trinity"
+                                                 ),
+                               "San Francisco Bay Area" = c("Alameda", 
+                                                            "Contra Costa", 
+                                                            "Marin", 
+                                                            "San Francisco", 
+                                                            "San Mateo", 
+                                                            "Santa Clara",
+                                                            "Solano"
+                                                            ),
+                               "Northern San Joaquin Valley" = c("Alpine", 
+                                                                 "Amador", 
+                                                                 "Calaveras",
+                                                                 "Madera",
+                                                                 "Mariposa",
+                                                                 "Merced", 
+                                                                 "Mono", 
+                                                                 "San Joaquin", "Stanislaus", 
+                                                                 "Tuolumne"
+                                                                ),
+                               "Central Coast" = c("Monterey",
+                                                   "San Benito",
+                                                   "San Luis Obispo",
+                                                   "Santa Barbara",
+                                                   "Santa Cruz",
+                                                   "Ventura"
+                                                   ),
+                               "Southern San Joaquin Valley" = c("Fresno",
+                                                                 "Inyo",
+                                                                 "Kern",
+                                                                 "Kings",
+                                                                 "Tulare"
+                                                                 ),
+                               "Inland Empire" = c("Riverside",
+                                                   "San Bernardino"
+                                                         ),
+                               "Los Angeles County" = c("Los Angeles"),
+                               "Orange County" = c("Orange"),
+                               "San Diego - Imperial" = c("San Diego",
+                                                    "Imperial"
+                                                    )
+                               )
+         ) 
+  
+  
 
-  
-  
-  
 ```
 
 
@@ -85,6 +149,25 @@ ca_childcare <- ca_childcare |>
 
 ```{r}
 #| label: median-income-by-region-over-time
+
+mhi_region <- ca_childcare |> 
+  select(region, 
+         study_year, 
+         mhi_2018 
+         ) |> 
+  filter(study_year %in% c(2008, 
+                           2018
+                           )
+         ) |> 
+  group_by(region, study_year) |>
+  summarize(median_household_income = median(mhi_2018),
+            .groups = "drop") |>
+  pivot_wider(names_from = study_year,
+              values_from = median_household_income) |> 
+  arrange(desc(`2008`), 
+          desc(`2018`
+              )
+          )
 
 ```
 
@@ -95,7 +178,19 @@ ca_childcare <- ca_childcare |>
 ```{r}
 #| label: lowest-median-weekly-price-2018
 
+lowest_median_income <- mhi_region |> 
+  select(region,
+         `2018`
+         ) |>
+  slice_min(order_by = `2018`,
+            n = 1
+            )
+ print(lowest_median_income)
+
+
 ```
+
+The region with the lowest median full time median weekly price for center based childcare for infants in 2018 is the North Coast. This differs from the region that had the lowest median for 2018 which was the NA category. 
 
 **6. The following plot shows, for all ten regions, the change over time of the full-time median price for center-based childcare for infants, toddlers, and preschoolers. Recreate the plot. You do not have to replicate the exact colors or theme, but your plot should have the same content, including the order of the facets and legend, reader-friendly labels, axes breaks, and a loess smoother.**
 
@@ -103,6 +198,9 @@ ca_childcare <- ca_childcare |>
 
 ```{r}
 #| label: recreate-plot
+
+recreate <- ca_childcare |> 
+  group_by()
 
 ```
 
