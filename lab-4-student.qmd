@@ -199,8 +199,46 @@ The region with the lowest median full time median weekly price for center based
 ```{r}
 #| label: recreate-plot
 
-recreate <- ca_childcare |> 
-  group_by()
+ca_childcare2 <- ca_childcare |>
+  select(study_year,
+         mc_infant,
+         mc_toddler,
+         mc_preschool,
+         region
+         ) |>
+  pivot_longer(cols = starts_with("mc_"), 
+               names_to = "age", 
+               values_to = "median_income"
+               ) |> 
+ mutate(fct_relevel = age, "mc_infant",
+                          "mc_toddler",
+                          "mc_preschool") |> 
+  drop_na()
+
+ggplot(data = ca_childcare2, 
+       mapping = aes(x = study_year,
+                          y = median_income,
+                          color = region
+                          )
+       ) +
+  geom_point() + 
+  geom_smooth() + 
+  facet_wrap(~ age,
+             scales = "free_y"
+             ) +  
+  labs(title = "Weekly Median Price for Center-Based Childcare ($)",
+       x = "Study Year",
+       y = "",
+       color = "California Region"
+       ) +
+  scale_x_continuous(breaks = seq(2008,
+                                  2018, 
+                                  by = 1
+                                  )
+                     ) +
+    theme(axis.text.x = element_text(angle = 45)
+          ) 
+
 
 ```
 
@@ -211,6 +249,26 @@ recreate <- ca_childcare |>
 
 ```{r}
 #| label: scatterplot-median-income-vs-childcare-cost
+
+ggplot(data = ca_childcare, 
+       mapping = aes(x = mhi_2018, 
+                     y = mc_infant
+                     )
+       ) + 
+  geom_point(alpha = 0.5) + 
+  geom_smooth(method = "lm",
+              color = "steelblue"
+              ) +
+  labs(title = "Relationship Between Median Household Income and Median Weekly 
+  Center-Based Chilcare Cost for an Infant in California",
+       x = "Median Household Income (in dollars)", 
+       y = ""
+       ) +  
+  scale_x_continuous(labels = scales:: comma) +
+  theme_minimal()
+ 
+
+
 
 ```
 
