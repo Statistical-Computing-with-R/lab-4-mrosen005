@@ -6,12 +6,14 @@ editor: source
 html: 
   embed-resources: true
   code-tools: true
-  code-fold: true
   toc: true
 execute: 
   echo: true
   message: false
   warning: false
+code-fold: true
+
+
 
 ---
 
@@ -250,6 +252,7 @@ ggplot(data = ca_childcare2,
 ```{r}
 #| label: scatterplot-median-income-vs-childcare-cost
 
+
 ggplot(data = ca_childcare, 
        mapping = aes(x = mhi_2018, 
                      y = mc_infant
@@ -263,10 +266,13 @@ ggplot(data = ca_childcare,
   Center-Based Chilcare Cost for an Infant in California",
        x = "Median Household Income (in dollars)", 
        y = ""
-       ) +  
-  scale_x_continuous(labels = scales:: comma) +
-  theme_minimal()
- 
+       ) +
+  scale_x_continuous(labels = scales :: comma) 
+
+
+# Used google to figure out how to transform numbers from scientific notation to standard notation 
+# https://forum.posit.co/t/ggplot2-histogram-of-frequencies-and-axis-formatting-comma-instead-is-scientific-in-facet-grid/66720 
+  
 
 
 
@@ -276,10 +282,24 @@ ggplot(data = ca_childcare,
 
 ```{r}
 # complete the code provided
-reg_mod1 <- lm()
+reg_mod1 <- lm(mc_infant ~ mhi_2018,
+               data = ca_childcare
+               )
+  
+
 summary(reg_mod1)
+
+
+
 ```
 
 **9. Using the output from `summary()`, write out the estimated regression line (recall: $y = mx + b$).**
 
+mc_infant = 0.002411 x mhi_2018 + 23.98 
+
+Predicted median weekly price charged for center-based childcare for an infant in California = 0.002411 x median household income + 23.98
+
 **10. Do you have evidence to conclude there is a relationship between the median household income and the median weekly cost of center-based childcare for infants in California? Cite values from your `summary()` output to support your claim!**
+
+With a p-value of 0.00000000000000022, and a significance level of 0.05, there is sufficient evidence to conclude that there is a relationship between the median household income and the median weekly cost of center-based childcare for infants in California. For every one dollar increase in median household income, the median weekly cost of center-based chilcare for infants in California is expected to increase by about 0.002411 dollars. Although this would be an extrapolation, if the median household income was zero dollars, the estimated cost of center-based chilcare for infants in California would be $23.98. 
+
