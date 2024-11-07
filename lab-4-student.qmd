@@ -1,17 +1,17 @@
 ---
 title: "Lab 4: Childcare Costs in California"
 author: "Miriam Rosen"
-format: html
+format: 
+  html:  
+    embed-resources: true
+    code-tools: true
+    code-fold: true
+    toc: true
 editor: source
-html: 
-  embed-resources: true
-  code-tools: true
-  toc: true
 execute: 
   echo: true
   message: false
   warning: false
-code-fold: true
 
 
 
@@ -39,9 +39,10 @@ childcare_costs <- read_csv('https://raw.githubusercontent.com/rfordatascience/t
 
 counties <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2023/2023-05-09/counties.csv')
 
-glimpse(childcare_costs)
-glimpse(counties)
+# glimpse(childcare_costs)
+# glimpse(counties)
 ```
+Reflection: I originally had glimpse() in the beginning of my report, but this is not necessary and I now realize this clutters the beginning of my report. 
 
 **1. Briefly describe the dataset (~ 4 sentences). What information does it contain?**
 
@@ -142,7 +143,6 @@ ca_childcare <- ca_childcare |>
                                )
          ) 
   
-  
 
 ```
 
@@ -152,7 +152,7 @@ ca_childcare <- ca_childcare |>
 ```{r}
 #| label: median-income-by-region-over-time
 
-mhi_region <- ca_childcare |> 
+ca_childcare |> 
   select(region, 
          study_year, 
          mhi_2018 
@@ -169,10 +169,14 @@ mhi_region <- ca_childcare |>
   arrange(desc(`2008`), 
           desc(`2018`
               )
-          )
+          ) |> 
+  rename(`Median Household Income in 2008` = `2008`,
+         `Median Household Income in 2018` = `2018`
+         ) |> 
+  drop_na()
 
 ```
-
+Reflection: In this revision, I renamed the two new columns made to be more descriptive of what the rows entail. Originally, I simply named them 2008 and 2018, but realized that these column names do not provide the reader with any details regarding what the columns contain. It is important that I use descriptive names so that if someone is looking at this data frame, they are able to easily understand what it is showing. 
 
 **5. Which California `region` had the lowest `median` full-time median weekly price for center-based childcare for infants in 2018? Does this `region` correspond to the `region` with the lowest `median` income in 2018 that you found in Q4?**  
 *Hint: The code should give me the EXACT answer. This means having the code output the exact row(s) and variable(s) necessary for providing the solution.*
@@ -180,19 +184,36 @@ mhi_region <- ca_childcare |>
 ```{r}
 #| label: lowest-median-weekly-price-2018
 
-lowest_median_income <- mhi_region |> 
-  select(region,
-         `2018`
-         ) |>
-  slice_min(order_by = `2018`,
+ca_childcare |> 
+  filter(study_year == 2018) |> 
+  group_by(region) |> 
+  summarize(median_childcare_price_infants = median(mc_infant,
+                                                    na.rm = TRUE
+                                                    )
+            ) |>  
+  drop_na() |>
+  slice_min(order_by = median_childcare_price_infants,
             n = 1
-            )
- print(lowest_median_income)
+            )  
+ 
+
+ca_childcare |> 
+   filter(study_year == 2018) |> 
+   group_by(region) |> 
+   summarize(median_income_by_region = median(mhi_2018,
+                                              na.rm = TRUE 
+                                              )
+             ) |> 
+   slice_min(order_by = median_income_by_region,
+             n = 1
+             ) 
 
 
 ```
 
-The region with the lowest median full time median weekly price for center based childcare for infants in 2018 is the North Coast. This differs from the region that had the lowest median for 2018 which was the NA category. 
+The region with the lowest median full time median weekly price for center based childcare for infants in 2018 is Superior California. The region with the lowest median household income for 2018 was the North Coast. 
+
+Reflection: Originally, I did not correctly understand what the question was asking for. I did not realize we were looking at a different variable that contains information on the cost for childcare and comparing it to median household income by region. In my revision, I used the summarize function to get the median weekly price for center-based childcare for infants in 2018 and then used the slice_min() function to get the region with the lowest median cost for center-base childcare for infants in 2018. Then, I summarized the median household income in 2018 by region and used the slice_min() function to get the region with the lowest median household income in 2018. For the future, I need to make sure I am using the right variables so that the summarizing I am doing is producing the correct information. 
 
 **6. The following plot shows, for all ten regions, the change over time of the full-time median price for center-based childcare for infants, toddlers, and preschoolers. Recreate the plot. You do not have to replicate the exact colors or theme, but your plot should have the same content, including the order of the facets and legend, reader-friendly labels, axes breaks, and a loess smoother.**
 
@@ -201,33 +222,39 @@ The region with the lowest median full time median weekly price for center based
 ```{r}
 #| label: recreate-plot
 
-ca_childcare2 <- ca_childcare |>
+library(scales)
+
+ca_childcare |>
   select(study_year,
          mc_infant,
          mc_toddler,
          mc_preschool,
          region
          ) |>
-  pivot_longer(cols = starts_with("mc_"), 
+  rename(Infant = mc_infant, 
+         Toddler = mc_toddler,
+         Preschool = mc_preschool
+         ) |> 
+  pivot_longer(cols = c("Infant",
+                       "Toddler", 
+                       "Preschool"
+                       ), 
                names_to = "age", 
                values_to = "median_income"
                ) |> 
- mutate(fct_relevel = age, "mc_infant",
-                          "mc_toddler",
-                          "mc_preschool") |> 
-  drop_na()
-
-ggplot(data = ca_childcare2, 
-       mapping = aes(x = study_year,
+  mutate(fct_relevel(age, "Infant",
+                          "Toddler",
+                          "Preschool")
+        ) |>
+  drop_na() |> 
+  ggplot(mapping = aes(x = study_year,
                           y = median_income,
                           color = region
                           )
        ) +
-  geom_point() + 
+  geom_point(size = 0.5) + 
   geom_smooth() + 
-  facet_wrap(~ age,
-             scales = "free_y"
-             ) +  
+  facet_wrap(~ age) +  
   labs(title = "Weekly Median Price for Center-Based Childcare ($)",
        x = "Study Year",
        y = "",
@@ -235,11 +262,27 @@ ggplot(data = ca_childcare2,
        ) +
   scale_x_continuous(breaks = seq(2008,
                                   2018, 
-                                  by = 1
+                                  by = 2,
                                   )
+                     ) + 
+  scale_y_continuous(breaks = c(100,
+                                200,
+                                300,
+                                400,
+                                500
+                                ), 
+                     limits = c(100,
+                                500
+                                )
                      ) +
-    theme(axis.text.x = element_text(angle = 45)
-          ) 
+  scale_color_brewer(palette = "Accent") +  
+  theme_bw() + 
+  theme(aspect.ratio = 1, 
+        axis.text.x = element_text(size = 6), 
+        legend.title = element_text(size = 8),   
+        legend.text = element_text(size = 8), 
+        title = element_text(size = 8)
+        )
 
 
 ```
@@ -253,6 +296,7 @@ ggplot(data = ca_childcare2,
 #| label: scatterplot-median-income-vs-childcare-cost
 
 
+
 ggplot(data = ca_childcare, 
        mapping = aes(x = mhi_2018, 
                      y = mc_infant
@@ -264,19 +308,17 @@ ggplot(data = ca_childcare,
               ) +
   labs(title = "Relationship Between Median Household Income and Median Weekly 
   Center-Based Chilcare Cost for an Infant in California",
-       x = "Median Household Income (in dollars)", 
+       x = "Median Household Income (in U.S. dollars)", 
        y = ""
        ) +
-  scale_x_continuous(labels = scales :: comma) 
-
-
-# Used google to figure out how to transform numbers from scientific notation to standard notation 
-# https://forum.posit.co/t/ggplot2-histogram-of-frequencies-and-axis-formatting-comma-instead-is-scientific-in-facet-grid/66720 
+  scale_x_continuous(labels = label_dollar()) +
+  scale_y_continuous(labels = label_dollar()) 
   
 
 
-
 ```
+Reflection: I incorporated the label_dollar() function from the scales package to add dollar signs and commas to the values on my x and y axis. This helps ensure the reader easily understands that these numbers are referring to U.S. dollars and makes my plot cleaner and more professional looking.  
+
 
 **8. Look up the documentation for `lm()` and fit a linear regression model to the relationship shown in your plot above.**
 
@@ -301,5 +343,8 @@ Predicted median weekly price charged for center-based childcare for an infant i
 
 **10. Do you have evidence to conclude there is a relationship between the median household income and the median weekly cost of center-based childcare for infants in California? Cite values from your `summary()` output to support your claim!**
 
-With a p-value of 0.00000000000000022, and a significance level of 0.05, there is sufficient evidence to conclude that there is a relationship between the median household income and the median weekly cost of center-based childcare for infants in California. For every one dollar increase in median household income, the median weekly cost of center-based chilcare for infants in California is expected to increase by about 0.002411 dollars. Although this would be an extrapolation, if the median household income was zero dollars, the estimated cost of center-based chilcare for infants in California would be $23.98. 
+With a p-value of 0.00000000000000022, and a significance level of 0.05, there is sufficient evidence to conclude that there is a relationship between the median household income and the median weekly cost of center-based childcare for infants in California. For every one dollar increase in median household income, the median weekly cost of center-based childcare for infants in California is expected to increase by about 0.002411 dollars. Although this would be an extrapolation, if the median household income was zero dollars, the estimated cost of center-based childcare for infants in California would be $23.98. Additionally, the R-squared value of 0.635 suggests that there this relationship between median household income and the price of infant childcare. 
+
+Reflection: I added the R-squared value as additional evidence to support the claim of an association between median household income and the price of infant childcare. Incorporating the R-squared value into my conclusion provides more evidence for the association, strengthening this claim.  
+ 
 
