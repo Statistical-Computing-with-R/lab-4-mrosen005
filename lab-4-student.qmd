@@ -223,6 +223,9 @@ Reflection: Originally, I did not correctly understand what the question was ask
 #| label: recreate-plot
 
 library(scales)
+library(RColorBrewer)
+
+custom <-colorRampPalette(brewer.pal(8, "Accent"))(10)
 
 ca_childcare |>
   select(study_year,
@@ -246,10 +249,13 @@ ca_childcare |>
                           "Toddler",
                           "Preschool")
         ) |>
-  drop_na() |> 
+  drop_na() |>
   ggplot(mapping = aes(x = study_year,
                           y = median_income,
-                          color = region
+                          color = fct_reorder2(region,
+                                               study_year,
+                                               median_income
+                                               )
                           )
        ) +
   geom_point(size = 0.5) + 
@@ -275,7 +281,7 @@ ca_childcare |>
                                 500
                                 )
                      ) +
-  scale_color_brewer(palette = "Accent") +  
+  scale_color_manual(values = custom) +
   theme_bw() + 
   theme(aspect.ratio = 1, 
         axis.text.x = element_text(size = 6), 
@@ -283,9 +289,11 @@ ca_childcare |>
         legend.text = element_text(size = 8), 
         title = element_text(size = 8)
         )
-
-
+# https://chatgpt.com/share/672d6cf0-7e54-800c-b1c4-bffb51095c06 My colorRampPalette was returning an error. I asked chatgpt what was wrong with the code. Chatgpt explained that I needed to make a custom palette and then how use the scale_color_manual() function to apply my custom palette,fixing the issue of not having enough colors in my legend. 
 ```
+Reflection: Originally, I attempted to recreate this plot, but missed a few of the key aspects that make this visualization clear and effective. Firstly, I incorporated the rename() function to rename the variables, mc_infant, mc_toddler, and mc_preschool to Infant, Toddler, and Preschool so that they would match Dr. Theobold's. This ensures that the labels in the facts represent the content of the visualization rather than just the original variable names in the data frame, which don't provide meaningful context on their own. Secondly, I used the mutate() and fct_relevel() functions to change the order of the levels so that they are in order of age, with Infant on the left, Toddler in the middle, and Preschool on the right. This is beneficial because it ensures the plot follows a logical progression, from youngest to oldest. Then, I used the theme() function to resize aspects of my visualization. This included using the aspect.ratio() function to make the facets proportional. This helped to spread out my squished text on the axes, making the values on my axes much more readable and clear. I also used the theme() function to resize the title of my visualization and the text in my legend. All of these changes to the text made my visualization more readable. I also used the scale_y_continuous() function to add values to my y-axis because there were only values 200, 300, and 400 and I felt it was beneficial to include 100 and 500 to provide a broader range of values, ensuring the axis is visually representative. I also made a custom color palette using the colorRampPalette() and the scale_color_manual() function to reorder the colors in the legend so they appear in the same order as the lines in the plot. This adds to making my visualization more easy to interpret. Lastly, I incorporated theme_bw() to apply a black and white theme to my plot, matching Dr. Theobold's theme. I also used the scale_color_brewer() function to add the Accent palette to match Dr. Theobold's colors on their visualization. These two changes make the visualization visually appealing and professional looking. Overall, these changes were important to incorporate because they enhanced the clarity, professional appearance, and readability of the visualization. 
+
+I also connected my dplyr pipeline to my ggplot to eliminate the need to pass an argument into the ggplot() function, meeting the criteria for PE-4 and making my code more efficient. 
 
 
 ## Median Household Income vs. Childcare Costs for Infants
